@@ -1,21 +1,39 @@
 package com.example.demo.library.filereader;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 public class FileLineReader {
   public String readLineInFile(String filePath, int lineNumber) throws IOException {
-    try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-      String line = null;
-      int currentLineNumber = 0;
-      while ((line = reader.readLine()) != null) {
-        if (currentLineNumber == lineNumber) {
-          return line;
-        }
-        currentLineNumber++;
+    File indexFile = new File(filePath + ".idx");
+
+    createIndexFile(filePath, indexFile);
+
+    // Read the byte offset from the index file
+    long byteOffset;
+    try (RandomAccessFile raf = new RandomAccessFile(indexFile, "r")) {
+      raf.seek(lineNumber * Long.BYTES);
+      byteOffset = raf.readLong();
+    }
+
+    try (RandomAccessFile raf = new RandomAccessFile(filePath, "r")) {
+      raf.seek(byteOffset);
+      return raf.readLine();
+    }
+  }
+
+  private void createIndexFile(String filePath, File indexFile) throws IOException {
+    try (
+        RandomAccessFile inputFile = new RandomAccessFile(filePath, "r");
+        RandomAccessFile idxFile = new RandomAccessFile(indexFile, "rw")
+    ) {
+      String line;
+      long prevByteOffset = 0;
+      while ((line = inputFile.readLine()) != null) {
+        idxFile.writeLong(prevByteOffset);
+        prevByteOffset = inputFile.getFilePointer();
       }
     }
-    throw new IllegalArgumentException("Line number is greater than the number of lines in the file");
   }
 }
