@@ -1,8 +1,12 @@
 package com.example.demo.library.filereader;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class FileLineReaderTest {
@@ -16,7 +20,7 @@ class FileLineReaderTest {
     var result = reader.readLineInFile(testFilePath, desiredLine);
 
     cleanupFileIndex(testFilePath);
-    Assertions.assertEquals("orange", result);
+    assertEquals("orange", result);
   }
 
   @Test
@@ -30,10 +34,21 @@ class FileLineReaderTest {
 
     File indexFile = new File(indexFilePath);
     
-    Assertions.assertTrue(indexFile.exists());
+    assertTrue(indexFile.exists());
     cleanupFileIndex(testFilePath);
   }
 
+  @Test
+  void itThrowsIOExceptionOnInvalidFile() {
+    FileLineReader reader = new FileLineReader();
+    String testFilePath = "src/test/resources/nonExistentFile.txt";
+    int desiredLine = 3;
+
+    assertThrows(FileNotFoundException.class, () -> {
+      reader.readLineInFile(testFilePath, desiredLine);
+    });
+  }
+  
   @Test
   void itIsAtLeast10TimesFasterSecondTime() throws Exception {
     FileLineReader reader = new FileLineReader();
@@ -44,7 +59,7 @@ class FileLineReaderTest {
     long duration2 = measureReadLineInFileDuration(reader, testFilePath, desiredLine);
 
     cleanupFileIndex(testFilePath);
-    Assertions.assertTrue(duration2 * 10 < duration1);
+    assertTrue(duration2 * 10 < duration1);
   }
 
   private long measureReadLineInFileDuration(FileLineReader reader, String filePath, int lineNumber) throws IOException {
