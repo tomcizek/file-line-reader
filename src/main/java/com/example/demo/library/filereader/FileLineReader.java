@@ -8,7 +8,9 @@ public class FileLineReader {
   public String readLineInFile(String filePath, int lineNumber) throws IOException {
     File indexFile = new File(filePath + ".idx");
 
-    createIndexFile(filePath, indexFile);
+    if (!indexFile.exists()) {
+      createIndexFile(filePath, indexFile);
+    }
 
     // Read the byte offset from the index file
     long byteOffset;

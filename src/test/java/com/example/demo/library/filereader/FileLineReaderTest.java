@@ -1,6 +1,7 @@
 package com.example.demo.library.filereader;
 
 import java.io.File;
+import java.io.IOException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -14,11 +15,10 @@ class FileLineReaderTest {
 
     var result = reader.readLineInFile(testFilePath, desiredLine);
 
-    Assertions.assertEquals("orange", result);
-    
     cleanupFileIndex(testFilePath);
+    Assertions.assertEquals("orange", result);
   }
-  
+
   @Test
   void itCreatesIndexFileAfterFirstRead() throws Exception {
     FileLineReader reader = new FileLineReader();
@@ -32,6 +32,26 @@ class FileLineReaderTest {
     
     Assertions.assertTrue(indexFile.exists());
     cleanupFileIndex(testFilePath);
+  }
+
+  @Test
+  void itIsAtLeast10TimesFasterSecondTime() throws Exception {
+    FileLineReader reader = new FileLineReader();
+    String testFilePath = "src/test/resources/testFile.txt";
+    int desiredLine = 3;
+
+    long duration1 = measureReadLineInFileDuration(reader, testFilePath, desiredLine);
+    long duration2 = measureReadLineInFileDuration(reader, testFilePath, desiredLine);
+
+    cleanupFileIndex(testFilePath);
+    Assertions.assertTrue(duration2 * 10 < duration1);
+  }
+
+  private long measureReadLineInFileDuration(FileLineReader reader, String filePath, int lineNumber) throws IOException {
+    long startTime = System.nanoTime();
+    reader.readLineInFile(filePath, lineNumber);
+    long endTime = System.nanoTime();
+    return endTime - startTime;
   }
 
   private static void cleanupFileIndex(String indexFilePath) {
